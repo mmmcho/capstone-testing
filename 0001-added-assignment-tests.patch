@@ -1,0 +1,84 @@
+From 7102efb4588f384b9f30aeaf8c9c20a5eb226160 Mon Sep 17 00:00:00 2001
+From: Martina <martina.cho@gmail.com>
+Date: Tue, 8 May 2018 08:55:45 -0700
+Subject: [PATCH 1/2] added assignment tests
+
+---
+ spec/factories/foobars.rb                      |  7 ++++++-
+ spec/features/foo_ui_buttons_spec.rb           | 14 ++++++++++++++
+ spec/requests/foo_api_error_reportings_spec.rb | 17 +++++++++++++++++
+ 3 files changed, 37 insertions(+), 1 deletion(-)
+ create mode 100644 spec/features/foo_ui_buttons_spec.rb
+ create mode 100644 spec/requests/foo_api_error_reportings_spec.rb
+
+diff --git a/spec/factories/foobars.rb b/spec/factories/foobars.rb
+index 51a9cf4..482a83e 100644
+--- a/spec/factories/foobars.rb
++++ b/spec/factories/foobars.rb
+@@ -8,6 +8,10 @@ FactoryGirl.define do
+     sequence(:name) {|n| "test#{n}" }
+   end
+ 
++  factory :foo_mod3names, class: 'Foo' do
++    sequence(:name, 0) {|n| "name#{n%10}"}
++  end
++
+   factory :foo_names, class: 'Foo' do
+     sequence(:name) {|n| ["larry", "moe", "curly"][n%3]  }
+   end
+@@ -33,7 +37,8 @@ FactoryGirl.define do
+     initialize_with { Foo.new(hash) }
+   end
+ 
+-  factory :foo, :parent=>:foo_faker do
++  #factory :foo, :parent=>:foo_faker do
++  factory :foo, :parent=>:foo_mod3names do
+   end
+ 
+   factory :bar do
+diff --git a/spec/features/foo_ui_buttons_spec.rb b/spec/features/foo_ui_buttons_spec.rb
+new file mode 100644
+index 0000000..a8332e8
+--- /dev/null
++++ b/spec/features/foo_ui_buttons_spec.rb
+@@ -0,0 +1,14 @@
++require 'rails_helper'
++
++RSpec.feature "FooUiButtons", type: :feature, :js=>true do
++  scenario "Create button disabled when no name" do
++    visit root_path
++    within(:xpath,FOO_FORM_XPATH) do
++      expect(find_field("name", :with=> ""))
++      expect(find_button("Create Foo", :disabled=> true))
++      fill_in("name", :with=>"test")
++      expect(find_button("Create Foo", :disabled=> false))
++    end
++
++  end
++end
+diff --git a/spec/requests/foo_api_error_reportings_spec.rb b/spec/requests/foo_api_error_reportings_spec.rb
+new file mode 100644
+index 0000000..b2c2531
+--- /dev/null
++++ b/spec/requests/foo_api_error_reportings_spec.rb
+@@ -0,0 +1,17 @@
++require 'rails_helper'
++
++RSpec.describe "FooApiErrorReportings", type: :request do
++
++    it "invalid Foo reports API error" do
++      post foos_path(foo:{id: 1})
++      expect(response).to have_http_status(422) or have_http_status(400)
++      expect(response.content_type).to eq("application/json")
++
++      #check the payload of the response
++      payload=parsed_body
++      pp payload
++      expect(payload).to have_key("errors")
++      expect(payload["errors"]).to have_key("full_messages")
++    end
++  
++end
+-- 
+2.15.1 (Apple Git-101)
+

@@ -1,0 +1,79 @@
+From 2a9fcdd94f549768874b472a705c2d2fc49525ea Mon Sep 17 00:00:00 2001
+From: Martina <martina.cho@gmail.com>
+Date: Tue, 8 May 2018 09:03:26 -0700
+Subject: [PATCH 2/2] added application solutions
+
+---
+ app/assets/javascripts/spa-demo/foos/foos.html | 10 +++++-----
+ app/controllers/application_controller.rb      | 10 +++++++++-
+ 2 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/app/assets/javascripts/spa-demo/foos/foos.html b/app/assets/javascripts/spa-demo/foos/foos.html
+index 98dbb6a..01fea5b 100644
+--- a/app/assets/javascripts/spa-demo/foos/foos.html
++++ b/app/assets/javascripts/spa-demo/foos/foos.html
+@@ -2,7 +2,7 @@
+   <h3>Foos</h3>
+   <span>(from spa-demo/foos/foos.html)</span>
+ 
+-  <form>
++  <form name="fooForm">
+     <div>
+       <label>Name:</label>
+       <input name="name"
+@@ -10,15 +10,15 @@
+               required="required"/>
+     </div>
+ 
+-    <button ng-if="!foosVM.foo.id" 
++    <button ng-if="!foosVM.foo.id"
+              type="submit"
+-             ng-click="foosVM.create()">Create Foo</button>  
++             ng-click="foosVM.create()" ng-disabled="fooForm.$invalid">Create Foo</button>
+     <div ng-if="foosVM.foo.id">
+       <button type="submit"
+               ng-click="foosVM.update()">Update Foo</button>
+       <button type="submit"
+               ng-click="foosVM.remove()">Delete Foo</button>
+-    </div>               
++    </div>
+     </form>
+ 
+   <ul>
+@@ -27,4 +27,4 @@
+     </li>
+   </ul>
+ 
+-</div>
+\ No newline at end of file
++</div>
+diff --git a/app/controllers/application_controller.rb b/app/controllers/application_controller.rb
+index 91d44c0..e7883df 100644
+--- a/app/controllers/application_controller.rb
++++ b/app/controllers/application_controller.rb
+@@ -4,13 +4,21 @@ class ApplicationController < ActionController::API
+ 
+   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+   rescue_from Mongoid::Errors::DocumentNotFound, with: :record_not_found
++  rescue_from ActiveRecord::StatementInvalid, with: :statement_invalid
+ 
+   protected
+-    def record_not_found(exception) 
++    def record_not_found(exception)
+       payload = {
+         errors: { full_messages:["cannot find id[#{params[:id]}]"] }
+       }
+       render :json=>payload, :status=>:not_found
+       Rails.logger.debug exception.message
+     end
++    def statement_invalid(exception)
++      payload = {
++        errors: { full_messages: exception.message }
++      }
++      render :json=>payload, :status=>422
++      Rails.logger.debug exception.message
++    end
+ end
+-- 
+2.15.1 (Apple Git-101)
+
