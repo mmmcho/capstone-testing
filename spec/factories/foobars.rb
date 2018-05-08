@@ -8,6 +8,10 @@ FactoryGirl.define do
     sequence(:name) {|n| "test#{n}" }
   end
 
+  factory :foo_mod3names, class: 'Foo' do
+    sequence(:name, 0) {|n| "name#{n%10}"}
+  end
+
   factory :foo_names, class: 'Foo' do
     sequence(:name) {|n| ["larry", "moe", "curly"][n%3]  }
   end
@@ -33,7 +37,8 @@ FactoryGirl.define do
     initialize_with { Foo.new(hash) }
   end
 
-  factory :foo, :parent=>:foo_faker do
+  #factory :foo, :parent=>:foo_faker do
+  factory :foo, :parent=>:foo_mod3names do
   end
 
   factory :bar do
